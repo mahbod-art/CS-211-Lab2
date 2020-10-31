@@ -149,3 +149,10 @@ int mydgetrf_block(double *A, int *ipiv, int n, int b)
 {
     return 0;
 }
+
+void swap(double* A, double* tmpr, int n, int r1, int r2)
+{
+    memcpy(tmpr, A + r1 * n, n * sizeof(double));
+    memcpy(A + r1 * n, A + r2 * n, n * sizeof(double));
+    memcpy(A + r2 * n, tmpr, n * sizeof(double));
+}
