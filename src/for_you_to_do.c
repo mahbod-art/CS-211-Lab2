@@ -142,7 +142,7 @@ void mydtrsv(char UPLO, double *A, double *B, int n, int *ipiv)
  * Same function as what you used in lab1, cache_part4.c : optimal( ... ).
  * 
  **/
-void mydgemm(double *A, double *B, double *C, int n, int i, int j, int k, int b)
+void mydgemm(const double* A, const double* B, double* C, const int m, const int p, const int n, const int b)
 {
     int i = 0;
     for (i = 0; i < m; i += b)
@@ -211,7 +211,6 @@ void mydgemm(double *A, double *B, double *C, int n, int i, int j, int k, int b)
             }
         }
     }
-    return;
 }
 
 /**
