@@ -102,6 +102,38 @@ int mydgetrf(double *A, int *ipiv, int n)
 void mydtrsv(char UPLO, double *A, double *B, int n, int *ipiv)
 {
     /* add your code here */
+    double *newB = (double*) malloc(n * sizeof(double));
+    int i, j;
+    if (UPLO == 'L')
+    {
+        for (i = 0; i < n; i++)
+        {
+            newB[i] = B[ipiv[i]];
+        }
+
+        for (i = 0; i < n; i++)
+        {
+            double sub = newB[i];
+            for (j = 0; j < i; j++)
+            {
+                sub -= B[j] * A[i * n + j];
+            }
+            B[i] = sub;
+        }
+    }
+    else
+    {//avoid cache miss
+        for (i = n-1; i >=0; i--)
+        {
+            double sum = 0;
+            for (j = i+1; j < n; j++)
+            {
+                sum += B[j] * A[i * n + j];
+            }
+            B[i] = (B[i] - sum) / A[i * n + i];
+        }
+    }
+    free(newB);
     return;
 }
 
