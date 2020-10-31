@@ -1,22 +1,12 @@
 #include "../include/for_you_to_do.h"
 #include <math.h>
-/**
- * 
- * this function computes LU factorization
- * for a square matrix
- * 
- * syntax 
- *  
- *  input : 
- *      A     n by n , square matrix
- *      ipiv  1 by n , vector
- *      n            , length of vector / size of matrix
- *  
- *  output :
- *      return -1 : if the matrix A is singular (max pivot == 0)
- *      return  0 : return normally 
- * 
- **/
+
+int get_block_size(){
+    //return the block size you'd like to use 
+    /*add your code here */
+    return 128;
+  
+}
 
 int mydgetrf(double* A, int* ipiv, int n)
 {
@@ -694,4 +684,3 @@ void swap(double* A, double* tmpr, int n, int r1, int r2)
     memcpy(A + r1 * n, A + r2 * n, n * sizeof(double));
     memcpy(A + r2 * n, tmpr, n * sizeof(double));
 }
-
