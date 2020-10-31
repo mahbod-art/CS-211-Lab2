@@ -8,6 +8,13 @@ int get_block_size(){
   
 }
 
+void swap(double* A, double* tmpr, int n, int r1, int r2)
+{
+    memcpy(tmpr, A + r1 * n, n * sizeof(double));
+    memcpy(A + r1 * n, A + r2 * n, n * sizeof(double));
+    memcpy(A + r2 * n, tmpr, n * sizeof(double));
+}
+
 int mydgetrf(double* A, int* ipiv, int n)
 {
     /* add your code here */
@@ -678,9 +685,4 @@ int mydgetrf_block_naive(double *A, int *ipiv, int n, int b)
     return 0;
 }
 
-void swap(double* A, double* tmpr, int n, int r1, int r2)
-{
-    memcpy(tmpr, A + r1 * n, n * sizeof(double));
-    memcpy(A + r1 * n, A + r2 * n, n * sizeof(double));
-    memcpy(A + r2 * n, tmpr, n * sizeof(double));
-}
+
