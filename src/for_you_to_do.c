@@ -1,14 +1,6 @@
 #include "../include/for_you_to_do.h"
 #include <math.h>
 
-int get_block_size(){
-    //return the block size you'd like to use 
-    /*add your code here */
-    return 128;
-  
-}
-
-#include "../include/for_you_to_do.h"
 /**
  *
  * this function computes LU factorization
@@ -26,50 +18,59 @@ int get_block_size(){
  *      return  0 : return normally
  *
  **/
+
+int get_block_size(){
+    //return the block size you'd like to use 
+    /*add your code here */
+    return 128;
+  
+}
+
 int mydgetrf(double *A, int *ipiv, int n)
 {
-//we have it in the lab2 it has just been changed to C
-int i, maxind, t,p , temps,j,k;
-double max;
-for(i=0; i<n-1; i++)
-{
-maxind = i;
-max = fabs(A[i*n+i]);
-for(t=i+1; t<n; t++)
-{
-if(fabs(A[i+t*n])>max)
-{
-maxind=t;
-max=fabs(A[t*n+i]);
-}
-}
-if(max==0)
-{
-return -1;
-}
-else if(maxind != i)
-{
-temps =ipiv[i];
-ipiv[i] = ipiv[maxind];
-ipiv[maxind] = temps;
-for(p=0;p<n;p++)
-{
-double tempv;
-tempv = A[i*n+p];
-A[i*n+p] = A[maxind*n+p];
-A[maxind*n+p] = tempv;
-}
-}for(p=i+1;p<n;p++)
-{
-A[p*n+i] = A[p*n+i]/A[i*n+i];
-for(k=i+1;k<n;k++){
-A[p*n+k] = A[p*n+k] - A[p*n+i] * A[i*n+k];
-}
-}
-}
-return 0;}
+    /* add your code here */
+		int i, maxind, t, j , temps,k;
+	        double max;
+	        for(i=0; i<n-1; i++)
+	        {
+	                /*Pivoting*/
+	                maxind = i;
+	                max = fabs(A[i*n+i]);
+	                for(t=i+1; t<n; t++)
+	                {
+	                        if(fabs(A[t*n+i])>max)
+	                                {
+	                                maxind=t;
+	                                max=fabs(A[t*n+i]);
+	                                }
+	                }
+	                if(max==0) return -1;
+	                else if(maxind != i)
+	                        {
+	                                /*save pivot information*/
+	                                temps =ipiv[i];
+	                                ipiv[i] = ipiv[maxind];
+	                                ipiv[maxind] = temps;
+	                                /*swap rows*/
+	                                for(j=0;j<n;j++)
+	                                {
+	                                        double tempv;
+	                                        tempv = A[i*n+j];
+	                                        A[i*n+j] = A[maxind*n+j];
+	                                        A[maxind*n+j] = tempv;
+	                                }
+	                        }
+	                /*factorization*/
+	                for(j=i+1;j<n;j++)
+	                {
+	                        A[j*n+i] = (double)A[j*n+i]/A[i*n+i];
+	                        for(k=i+1;k<n;k++)
+	                                A[j*n+k] = A[j*n+k] - A[j*n+i] * A[i*n+k];
+	                }
+	        }
 
-
+    return 0;
+}
 
 /**
  *
@@ -99,93 +100,92 @@ return 0;}
  *
  **/
 void mydtrsv(char UPLO, double *A, double *B, int n, int *ipiv)
-{int i,j;
-double y[n];
-//since we call this function with 'L' and 'U'we need an 'if' which we do not have in the code which is given
-if(UPLO =='L')
 {
-y[0] = B[ipiv[0]];
-for (i=1; i<n; i++)
-{
-double sum=0;
-for (j = 0; j < i; j++)
-sum += y[j] * A[i*n+j];
-y[i] = B[ipiv[i]]-sum;
+	/* add your code here */
+				double y[n];
+        int i;
+        int j;
+        if(UPLO =='L')
+        {
+        y[0] = B[ipiv[0]];
+        for (i=1; i<n; i++)
+        {
+                double sum=0;
+                for (j = 0; j < i; j++)
+                        sum += y[j] * A[i*n+j];
+                y[i] = B[ipiv[i]]-sum;
+        }
+        }
+
+        else if(UPLO =='U')
+        {
+        y[n-1] =(double)B[n-1] / A[(n - 1) * n + (n - 1)];
+        for (i = n-2; i >= 0; i--)
+        {
+                double sum =0;
+                for (j = i + 1; j < n; j++)
+                        sum += y[j] * A[i * n + j];
+                y[i] = (B[i] - sum) / A[i * n + i];
+        }
+
+
+
+        }
+        for(i = 0; i < n; i++)
+                B[i] = y[i];
+
+	return;
 }
-}
-  else if(UPLO =='U')
-{
-y[n-1] =B[n-1] / A[(n - 1) * n + (n - 1)];
-for (i = n-2; i >= 0; i--)
-{
-double sum =0;
-for (j = i + 1; j < n; j++)
-sum += y[j] * A[i * n + j];
-y[i] = (B[i] - sum) / A[i * n + i];}
-}else{
-printf("something is wrong");
-}
-for(i = 0; i < n; i++){
-B[i] = y[i];
-}
-return;
-}
+
 /**
  *
  * Same function as what you used in lab1, cache_part4.c : optimal( ... ).
  *
  **/
-void mydgemm(double *A, double *B, double *C, int n, int i1, int j1, int b)
+void mydgemm(double *A, double *B, double *C, int n, int matx, int maty, int b)
 {
-// my code from lab1 with some changes
-if(n%2==0){
-       register int reg1,reg2;
-        int i , j , k , iblock, jblock , kblock;
-        for( k = 0;k < j1 ; k += b)
-                for( i = 0;i < i1;i += b)
-                        for( j = 0;j < i1;j += b)
+	int i , j , k , iB, jB , kB;
+        for( k = 0;k < maty ; k += b)
+                for( i = 0;i < matx;i += b)
+                        for( j = 0;j < matx ;j += b)
                         {
-                                for( kblock = k;kblock < k + b && kblock <j1 ;kblock += 2)
-                                        for( iblock = i;iblock <i + b && iblock < i1;iblock += 2)
-                                              {
-                                                register int reg1 = iblock *n + kblock;
-                                                register int reg2 = reg1 + n;
-                                                register double a00 = A[reg1],a01 = A[reg1 + 1],a10 = A[reg2],a11 = A[reg2 + 1];
-                                                for(jblock = j;jblock < j + b && jblock < i1;jblock += 2)
+                                for( kB = k;kB < k + b && kB < maty;kB += 2)
+                                        for( iB = i;iB <i + b && iB < matx;iB += 2)
+                                        {
+                                                register int regA00 = iB *n + kB;
+                                                register int regA10 = regA00 + n;
+                                                register double a00 = A[regA00],a01 = A[regA00 + 1],a10 = A[regA10],a11 = A[regA10 + 1];
+                                                for(jB = j;jB < j + b && jB < matx;jB += 2)
                                                 {
-                                                        register int pb = kblock * n + jblock;
-                                                        register int pb1 = n+pb ;
-                                                        register int pc = iblock * n + jblock;                                                                                                  register int pc1 = n+ pc ;
-                                                        register double b00 = B[pb],b10 = B[pb1];
-                                                        register double c00 = C[pc],c01 = C[pc + 1],c10 = C[pc1],c11 = C[pc1 + 1];
-                                                        c00 -= a00 * b00 + a01 * b10;
-                                                      c10 -= a10 * b00 + a11 * b10;                                                                                                       b10= B[pb + 1];
-                                                           b00=B[pb1 + 1];                                                                                                              c01 -= a00 * b10 + a01 * b00;
-                                                        c11-= a10 * b10 + a11 * b00;
-                                                         C[pc]=c00;C[pc + 1]=c01; C[pc1]=c10;C[pc1 + 1]=c11;
+                                                        register int regB00 = kB * n + jB,regC00 = iB * n + jB;
+                                                        register int regB10 = regB00 + n,regC10 = regC00 + n;
+                                                        register double b00 = B[regB00],b01 = B[regB00 + 1],b10 = B[regB10],b11 = B[regB10 + 1];
+                                                        register double c00 = C[regC00],c01 = C[regC00 + 1],c10 = C[regC10],c11 = C[regC10 + 1];
+                                                        C[regC00] -= a00 * b00 + a01 * b10;
+                                                        C[regC00+1] -= a00 * b01 + a01 * b11;
+                                                        C[regC10] -= a10 * b00 + a11 * b10;
+                                                        C[regC10+1] -= a10 * b01 + a11 * b11;
 
                                                 }
                                         }
+                        }/*
+	int i , j , k, iB , jB , kB;
+		for(k = 0;k < maty;k += b)
+			for(i = 0;i < matx;i += b)
+				for( j = 0;j < matx;j += b)
+				{
+					for(kB = k;kB <k + b && kB < maty;kB++)
+						for(iB = i;iB < i + b && iB < matx;iB++)
+						{
+							register double sum = A[iB * n + kB];
+							for(jB = j;jB < j + b && jB < matx;jB++)
+								C[iB * n + jB] -=sum*B[kB * n + jB];
+						}
+				}*/
 
 
-}}
-// handling if n%2!=0 as the above code dose not cover it corectly.
-else if(n%2==1){
-   int i,j,k,iblock,kblock,jblock;
-    for( k=0;k<j1;k+=b)
-        for( j=0;j<i1;j+=b)
-            for( i=0;i<i1;i+=b)
-            {
- for( kblock=k;kblock<k+b && kblock<j1;kblock++)
-                    for( jblock=j;jblock<j+b && jblock<i1;jblock++)
-                    {
-                        register double r=B[kblock*n+jblock];
-                        for( iblock=i;iblock<i+b && iblock<i1;iblock++)
-                            C[iblock*n+jblock]-=r*A[iblock*n+kblock];
-                    }
-            }
 }
-}
+
 /**
  *
  * this function computes triangular matrix - vector solver
@@ -207,17 +207,6 @@ else if(n%2==1){
  *
  *      ipiv  1 by n     , vector , denotes interchanged index due
  *                                  to pivoting by mydgetrf()
- *  input :
- *      UPLO  'L' or 'U' , denotes whether input matrix is upper
- *                         lower triangular . ( forward / backward
- *                         substitution )
- *
- *      A     n by n     , square matrix
- *
- *      B     1 by n     , vector
- *
- *      ipiv  1 by n     , vector , denotes interchanged index due
- *                                  to pivoting by mydgetrf()
  *
  *      n                , length of vector / size of matrix
  *
@@ -226,69 +215,74 @@ else if(n%2==1){
  *      return  0 : return normally
  *
  **/
-int mydgetrf_block(double *A, int *ipiv, int n, int b) {
-// the site "http://people.eecs.berkeley.edu/~demmel/cs267/lecture12/lecture12.html" was used .it has the explanations like the course slides and the question given and was found when trying to learn more.
-int i,j,k, maxind, ib,t ,end;
-double max, addition=0;
-double p, change ;
-for(ib = 0; ib < n - 1; ib =ib + b)
+int mydgetrf_block(double *A, int *ipiv, int n, int b)
 {
-if(ib+b-1>n-1){
-end=n-1;
-}else if(ib+b-1<n-1){
-end=ib+b-1;
-}
-for(i = ib; i <= end; i++)
-{
-maxind = i;
-max = fabs(A[i*n+i]);
-for(k = i+1; k < n; k++)
-{
-if(fabs(A[k * n + i]) > max)
-{
-maxind = k;
-max = fabs(A[k * n + i]);
-}
-}
-if(max == 0){
-return -1;}
-else if (maxind !=i)
-{
-p = ipiv[i];
-ipiv[i] = ipiv[maxind];
-ipiv[maxind] = p;
+		int i, maxind, k, j, ib, end, temps, t;
+		double max;
+		for(ib = 0; ib < n - 1; ib += b)
+		{
+			/*Partial Pivoting*/
+			end = ((n-1) > (ib + b -1)) ? (ib + b - 1) : n-1;
+			//printf("end = %d\n",end);
+			for(i = ib; i <= end; i++)
+			{
+				maxind = i;
+				max = fabs(A[i*n+i]);
+				for(k = i+1; k < n; k++)
+				{
+					if(fabs(A[k * n + i]) > max)
+					{
+						maxind = k;
+						max = fabs(A[k * n + i]);
+					}
+				}
+				if(max == 0) return -1;
+				else if (maxind !=i)
+				{
 
-for(j = 0; j < n; j++)
-{
-change = A[i * n + j];
-A[i*n+j] = A[maxind*n+j];
-A[maxind*n+j] = change;
-}}
-for(j = i + 1; j < n; j++)
-{
-A[j * n + i] = A[j * n + i] / A[i * n + i];
-for(t = i + 1;t <= end; t++)
-{
-A[j*n+t] = A[j*n+t] - A[j*n+i] * A[i*n+t];
-}
-}
-}
-for(i = ib; i <= end; i++)
-{
-for(k = end +1; k < n; k++)
-{
- addition=0;
-for(j = ib; j < i; j++)
-{
-addition =addition + A[i * n + j] * A [j * n + k];
-}
-A[i * n + k] = A[i * n + k]-addition;
-}
-}int num=end+1;
- mydgemm(&A[((num)*n)+ ib], &A[num +n*ib],&A[((num)*n) +(num)], n ,(n-end-1),num-ib, 64);
-}
-return 0;
-}
+					/*Save Pivot Infortmation*/
+					temps = ipiv[i];
+					ipiv[i] = ipiv[maxind];
+					ipiv[maxind] = temps;
+					/*Swap rows*/
+					for(j = 0; j < n; j++)
+					{
+						double tempv;
+						tempv = A[i * n + j];
+						A[i * n + j] = A[maxind * n + j];
+						A[maxind * n + j] = tempv;
+					}
+				}
 
+				/*Update columns i+1 to end*/
+				for(j = i + 1; j < n; j++)
+				{
+					A[j * n + i] = (double)A[j * n + i] / A[i * n + i];
+					for(t = i + 1;t <= end; t++)
+					{
+						A[j*n+t] = A[j*n+t] - A[j*n+i] * A[i*n+t];
+					}
+				}
+			}
 
-
+			/*inv(LL)*/
+			/*double y;y = (double *) malloc(sizeof(double) * (end - ib + 1) * (n - end));y[0] =; */
+			for(i = ib; i <= end; i++)
+			{
+				for(k = end +1; k < n; k++)
+				{
+					double sum = 0;
+					for(j = ib; j < i; j++)
+					{
+						sum += A[i * n + j] * A [j * n + k];
+					}
+					A[i * n + k] -= sum;
+				}
+			}
+			/*Delayed update of rest of matrix using matrix-matrix multiplication*/
+			/*void mydgemm(double *A, double *B, double *C, int n, int matx, int maty, int b)*/
+			//if(end!=n)
+			mydgemm(&A[(end+1) * n + ib], &A[ib * n + end +1], &A[(end+1) * n + (end + 1)], n , (n - end - 1) , (end-ib+1/*=b*/), 32);
+		}
+    return 0;
+}
