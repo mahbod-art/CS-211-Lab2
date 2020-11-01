@@ -1,4 +1,14 @@
 #include "../include/for_you_to_do.h"
+#include <math.h>
+
+int get_block_size(){
+    //return the block size you'd like to use 
+    /*add your code here */
+    return 128;
+  
+}
+
+#include "../include/for_you_to_do.h"
 /**
  * 
  * this function computes LU factorization
