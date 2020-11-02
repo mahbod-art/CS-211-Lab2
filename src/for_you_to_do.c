@@ -141,52 +141,48 @@ void mydtrsv(char UPLO, double* A, double* B, int n, int* ipiv)
  **/
 
 
-void mydgemm(double *A, double *B, double *C, int n, int z, int m, int b)
+void mydgemm(double *A, double *B, double *C, int n, int matx, int maty, int b)
 {
-    int i, j, k;
-    int i_BLOCK, j_BLOCK, k_BLOCK;
-    for (k = 0; k < m; k += b)
-    {
-        for (i = 0; i < z; i += b)
-        {
-            for (j = 0; j < z; j += b)
-            {
-                for (k_BLOCK = k; k_BLOCK < k + b && k_BLOCK < m; k_BLOCK += 2)
-                {
-                    for (i_BLOCK = i; i_BLOCK < i + b && i_BLOCK < z; i_BLOCK += 2)
-                    {
-                        register int RA1 = i_BLOCK * n + k_BLOCK;
-                        register int RA2 = RA1 + n;
-                        register double a_1 = A[RA1];
-                        register double a_2 = A[RA1 + 1];
-                        register double a_3 = A[RA2];
-                        register double a_4 = A[RA2 + 1];
-
-                        for (j_BLOCK = j; j_BLOCK < j + b && j_BLOCK < z; j_BLOCK += 2)
+	int i , j , k , iB, jB , kB;
+        for( k = 0;k < maty ; k += b)
+                for( i = 0;i < matx;i += b)
+                        for( j = 0;j < matx ;j += b)
                         {
-                            register int RB1 = k_BLOCK * n + j_BLOCK;
-                            register int RC1 = i_BLOCK * n + j_BLOCK;
-                            register int RB2 = RB1 + n; 
-                            register int RC2 = RC1 + n;
-                            register double b_0 = B[RB1];
-                            register double b_1 = B[RB1 + 1];
-                            register double b_2 = B[RB2]; 
-                            register double b_3 = B[RB2 + 1];
-                            register double c_0 = C[RC1];
-                            register double c_1 = C[RC1 + 1];
-                            register double c_2 = C[RC2];
-                            register double c_3 = C[RC2 + 1];
+                                for( kB = k;kB < k + b && kB < maty;kB += 2)
+                                        for( iB = i;iB <i + b && iB < matx;iB += 2)
+                                        {
+                                                register int regA00 = iB *n + kB;
+                                                register int regA10 = regA00 + n;
+                                                register double a00 = A[regA00],a01 = A[regA00 + 1],a10 = A[regA10],a11 = A[regA10 + 1];
+                                                for(jB = j;jB < j + b && jB < matx;jB += 2)
+                                                {
+                                                        register int regB00 = kB * n + jB,regC00 = iB * n + jB;
+                                                        register int regB10 = regB00 + n,regC10 = regC00 + n;
+                                                        register double b00 = B[regB00],b01 = B[regB00 + 1],b10 = B[regB10],b11 = B[regB10 + 1];
+                                                        register double c00 = C[regC00],c01 = C[regC00 + 1],c10 = C[regC10],c11 = C[regC10 + 1];
+                                                        C[regC00] -= a00 * b00 + a01 * b10;
+                                                        C[regC00+1] -= a00 * b01 + a01 * b11;
+                                                        C[regC10] -= a10 * b00 + a11 * b10;
+                                                        C[regC10+1] -= a10 * b01 + a11 * b11;
 
-                            C[RC1] = C[RC1] - a_1 * b_0 + a_2 * b_2;
-                            C[RC1 + 1] = C[RC1 + 1] - a_1 * b_1 + a_2 * b_3;
-                            C[RC2] = C[RC2] - a_3 * b_0 + a_4 * b_2;
-                            C[RC2 + 1] = C[RC2 + 1] - a_3 * b_1 + a_4 * b_3;
-                        }
-                    }
-                }
-            } 
-        }
-    }
+                                                }
+                                        }
+                        }/*
+	int i , j , k, iB , jB , kB;
+		for(k = 0;k < maty;k += b)
+			for(i = 0;i < matx;i += b)
+				for( j = 0;j < matx;j += b)
+				{
+					for(kB = k;kB <k + b && kB < maty;kB++)
+						for(iB = i;iB < i + b && iB < matx;iB++)
+						{
+							register double sum = A[iB * n + kB];
+							for(jB = j;jB < j + b && jB < matx;jB++)
+								C[iB * n + jB] -=sum*B[kB * n + jB];
+						}
+				}*/
+
+
 }
 
 /**
@@ -220,72 +216,60 @@ void mydgemm(double *A, double *B, double *C, int n, int z, int m, int b)
  **/
 int mydgetrf_block(double *A, int *ipiv, int n, int b)
 {
-		int i, maxind, k, j, ib, end, temps, t;
-		double max;
-		for(ib = 0; ib < n - 1; ib += b)
-		{
-			/*Partial Pivoting*/
-			end = ((n-1) > (ib + b -1)) ? (ib + b - 1) : n-1;
-			//printf("end = %d\n",end);
-			for(i = ib; i <= end; i++)
-			{
-				maxind = i;
-				max = fabs(A[i*n+i]);
-				for(k = i+1; k < n; k++)
-				{
-					if(fabs(A[k * n + i]) > max)
-					{
-						maxind = k;
-						max = fabs(A[k * n + i]);
-					}
-				}
-				if(max == 0) return -1;
-				else if (maxind !=i)
-				{
+    int i, j, k, max_of_index, i_BLOCK, q, var, t;
+    
+    for (i_BLOCK = 0; i_BLOCK < n - 1; i_BLOCK += b)
+    {
+        q = ((n - 1) > (i_BLOCK + b - 1)) ? (i_BLOCK + b - 1) : n - 1;
+        for (i = i_BLOCK; i <= q; i++)
+        {
+            max_of_index = i;
+            double max = fabs(A[i * n + i]);
+            for (k = i + 1; k < n; k++)
+            {
+                if (fabs(A[k * n + i]) > max)
+                {
+                    max_of_index = k; 
+                    max = fabs(A[k * n + i]);
+                }
+            }
+            if (max == 0)
+                return -1;
+            else if (max_of_index != i)
+            {
+                var = ipiv[i];
+                ipiv[i] = ipiv[max_of_index];
+                ipiv[max_of_index] = var;
+                for (j = 0; j < n; j++)
+                {
+                    double tempv;
+                    tempv = A[i * n + j];
+                    A[i * n + j] = A[max_of_index * n + j];
+                    A[max_of_index * n + j] = tempv;
+                }
+            }
+            for (j = i + 1; j < n; j++)
+            {
+                A[j * n + i] = (double)A[j * n + i] / A[i * n + i];
+                for (t = i + 1; t <= q; t++)
+                    A[j * n + t] = A[j * n + t] - A[j * n + i] * A[i * n + t];
+            }
+        }
 
-					/*Save Pivot Infortmation*/
-					temps = ipiv[i];
-					ipiv[i] = ipiv[maxind];
-					ipiv[maxind] = temps;
-					/*Swap rows*/
-					for(j = 0; j < n; j++)
-					{
-						double tempv;
-						tempv = A[i * n + j];
-						A[i * n + j] = A[maxind * n + j];
-						A[maxind * n + j] = tempv;
-					}
-				}
-
-				/*Update columns i+1 to end*/
-				for(j = i + 1; j < n; j++)
-				{
-					A[j * n + i] = (double)A[j * n + i] / A[i * n + i];
-					for(t = i + 1;t <= end; t++)
-					{
-						A[j*n+t] = A[j*n+t] - A[j*n+i] * A[i*n+t];
-					}
-				}
-			}
-
-			/*inv(LL)*/
-			/*double y;y = (double *) malloc(sizeof(double) * (end - ib + 1) * (n - end));y[0] =; */
-			for(i = ib; i <= end; i++)
-			{
-				for(k = end +1; k < n; k++)
-				{
-					double sum = 0;
-					for(j = ib; j < i; j++)
-					{
-						sum += A[i * n + j] * A [j * n + k];
-					}
-					A[i * n + k] -= sum;
-				}
-			}
-			/*Delayed update of rest of matrix using matrix-matrix multiplication*/
-			/*void mydgemm(double *A, double *B, double *C, int n, int matx, int maty, int b)*/
-			//if(end!=n)
-			mydgemm(&A[(end+1) * n + ib], &A[ib * n + end +1], &A[(end+1) * n + (end + 1)], n , (n - end - 1) , (end-ib+1/*=b*/), 32);
-		}
+        for (i = i_BLOCK; i <= q; i++)
+        {
+            for (k = q + 1; k < n; k++)
+            {
+                double sum = 0;
+                for (j = i_BLOCK; j < i; j++)
+                {
+                    sum = sum + A[i * n + j] * A[j * n + k];
+                }
+                A[i * n + k] = A[i * n + k] - sum;
+            }
+        }
+        
+        mydgemm(&A[(q + 1) * n + i_BLOCK], &A[i_BLOCK * n + q + 1], &A[(q + 1) * n + (q + 1)], n, (n - q - 1), (q - i_BLOCK + 1), 32);
+    }
     return 0;
 }
