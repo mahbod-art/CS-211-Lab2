@@ -33,7 +33,8 @@ int mydgetrf(double *A, int *ipiv, int n)
     {
         max_of_index = i;
         double max = fabs (A[i * n + i]);
-        for (int m = i + 1; m < n; m++)
+        int m;
+        for (m = i + 1; m < n; m++)
         {
             if (fabs(A[i + m * n]) > max)
             {
@@ -52,8 +53,9 @@ int mydgetrf(double *A, int *ipiv, int n)
             var = ipiv[i];
             ipiv[i] = ipiv[max_of_index];
             ipiv[max_of_index] = var;
-
-            for (int l = 0; l < n; l++)
+            
+            int l;
+            for (l = 0; l < n; l++)
             {
                 double tempv;
                 tempv = A[i * n + l];
@@ -63,7 +65,8 @@ int mydgetrf(double *A, int *ipiv, int n)
         }
 
         //factorization part
-        for (int z = i + 1; z < n; z++)
+        int z;
+        for (z = i + 1; z < n; z++)
         {
             A[z * n + i] = A[z * n + i] / A[i * n + i];
             for (k = i + 1; k < n; k++)
@@ -101,38 +104,35 @@ int mydgetrf(double *A, int *ipiv, int n)
  *
  **/
 
-void mydtrsv(char UPLO, double *A, double *B, int n, int *ipiv)
+void mydtrsv(char UPLO, double* A, double* B, int n, int* ipiv)
 {
     /* add your code here */
-    double y[n];
-    int i;
-    int j;
+    int i, j;
+    double *new_var = (double*) malloc(n * sizeof(double));
     if (UPLO == 'L')
     {
-        y[0] = B[ipiv[0]];
-        for (i = 1; i < n; i++)
+        for (i = 0; i < n; i++)
+            new_var[i] = B[ipiv[i]];
+
+        for (i = 0; i < n; i++)
         {
-            double sum = 0;
+            double sub = new_var[i];
             for (j = 0; j < i; j++)
-                sum += y[j] * A[i * n + j];
-            y[i] = B[ipiv[i]] - sum;
+                sub -= B[j] * A[i * n + j];
+            B[i] = sub;
         }
     }
-
-    else if (UPLO == 'U')
+    else
     {
-        y[n - 1] = (double)B[n - 1] / A[(n - 1) * n + (n - 1)];
-        for (i = n - 2; i >= 0; i--)
+        for (i = n-1; i >= 0; i--)
         {
             double sum = 0;
-            for (j = i + 1; j < n; j++)
-                sum += y[j] * A[i * n + j];
-            y[i] = (B[i] - sum) / A[i * n + i];
+            for (j = i+1; j < n; j++)
+                sum = sum + B[j] * A[i * n + j];
+            B[i] = (B[i] - sum) / A[i * n + i];
         }
     }
-    for (i = 0; i < n; i++)
-        B[i] = y[i];
-
+    free(new_var);
     return;
 }
 
@@ -141,6 +141,7 @@ void mydtrsv(char UPLO, double *A, double *B, int n, int *ipiv)
  * Same function as what you used in lab1, cache_part4.c : optimal( ... ).
  *
  **/
+
 void mydgemm(double *A, double *B, double *C, int n, int matx, int maty, int b)
 {
     int i, j, k, iB, jB, kB;
@@ -166,20 +167,7 @@ void mydgemm(double *A, double *B, double *C, int n, int matx, int maty, int b)
                             C[regC10 + 1] -= a10 * b01 + a11 * b11;
                         }
                     }
-            } /*
-	int i , j , k, iB , jB , kB;
-		for(k = 0;k < maty;k += b)
-			for(i = 0;i < matx;i += b)
-				for( j = 0;j < matx;j += b)
-				{
-					for(kB = k;kB <k + b && kB < maty;kB++)
-						for(iB = i;iB < i + b && iB < matx;iB++)
-						{
-							register double sum = A[iB * n + kB];
-							for(jB = j;jB < j + b && jB < matx;jB++)
-								C[iB * n + jB] -=sum*B[kB * n + jB];
-						}
-				}*/
+            } 
 }
 
 /**
