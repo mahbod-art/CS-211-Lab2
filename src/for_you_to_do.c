@@ -143,46 +143,37 @@ void mydtrsv(char UPLO, double* A, double* B, int n, int* ipiv)
 
 void mydgemm(double *A, double *B, double *C, int n, int matx, int maty, int b)
 {
-	int i , j , k , iB, jB , kB;
-        for( k = 0;k < maty ; k += b)
-                for( i = 0;i < matx;i += b)
-                        for( j = 0;j < matx ;j += b)
+	int i , j , k , i_BLOCK, j_BLOCK , k_BLOCK;
+    for( k = 0;k < maty ; k += b)
+    {
+        for( i = 0;i < matx;i += b)
+        {
+            for( j = 0;j < matx ;j += b)
+            {
+                for( k_BLOCK = k;k_BLOCK < k + b && k_BLOCK < maty;k_BLOCK += 2)
+                {
+                    for( i_BLOCK = i;i_BLOCK <i + b && i_BLOCK < matx;i_BLOCK += 2)
+                    {
+                        register int A1 = i_BLOCK *n + k_BLOCK;
+                        register int A2 = A1 + n;
+                        register double a00 = A[A1],a01 = A[A1 + 1],a10 = A[A2],a11 = A[A2 + 1];
+                        for(j_BLOCK = j;j_BLOCK < j + b && j_BLOCK < matx;j_BLOCK += 2)
                         {
-                                for( kB = k;kB < k + b && kB < maty;kB += 2)
-                                        for( iB = i;iB <i + b && iB < matx;iB += 2)
-                                        {
-                                                register int regA00 = iB *n + kB;
-                                                register int regA10 = regA00 + n;
-                                                register double a00 = A[regA00],a01 = A[regA00 + 1],a10 = A[regA10],a11 = A[regA10 + 1];
-                                                for(jB = j;jB < j + b && jB < matx;jB += 2)
-                                                {
-                                                        register int regB00 = kB * n + jB,regC00 = iB * n + jB;
-                                                        register int regB10 = regB00 + n,regC10 = regC00 + n;
-                                                        register double b00 = B[regB00],b01 = B[regB00 + 1],b10 = B[regB10],b11 = B[regB10 + 1];
-                                                        register double c00 = C[regC00],c01 = C[regC00 + 1],c10 = C[regC10],c11 = C[regC10 + 1];
-                                                        C[regC00] -= a00 * b00 + a01 * b10;
-                                                        C[regC00+1] -= a00 * b01 + a01 * b11;
-                                                        C[regC10] -= a10 * b00 + a11 * b10;
-                                                        C[regC10+1] -= a10 * b01 + a11 * b11;
+                            register int B1 = k_BLOCK * n + j_BLOCK,C1 = i_BLOCK * n + j_BLOCK;
+                            register int B2 = B1 + n,C2 = C1 + n;
+                            register double b00 = B[B1],b01 = B[B1 + 1],b10 = B[B2],b11 = B[B2 + 1];
+                            register double c00 = C[C1],c01 = C[C1 + 1],c10 = C[C2],c11 = C[C2 + 1];
+                            C[C1] -= a00 * b00 + a01 * b10;
+                            C[C1+1] -= a00 * b01 + a01 * b11;
+                            C[C2] -= a10 * b00 + a11 * b10;
+                            C[C2+1] -= a10 * b01 + a11 * b11;
 
-                                                }
-                                        }
-                        }/*
-	int i , j , k, iB , jB , kB;
-		for(k = 0;k < maty;k += b)
-			for(i = 0;i < matx;i += b)
-				for( j = 0;j < matx;j += b)
-				{
-					for(kB = k;kB <k + b && kB < maty;kB++)
-						for(iB = i;iB < i + b && iB < matx;iB++)
-						{
-							register double sum = A[iB * n + kB];
-							for(jB = j;jB < j + b && jB < matx;jB++)
-								C[iB * n + jB] -=sum*B[kB * n + jB];
-						}
-				}*/
-
-
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 /**
@@ -216,14 +207,12 @@ void mydgemm(double *A, double *B, double *C, int n, int matx, int maty, int b)
  **/
 int mydgetrf_block(double *A, int *ipiv, int n, int b)
 {
-		int i, maxind, k, j, ib, end, temps, t;
+		int i, maxind, k, j, i_BLOCK, end, temps, t;
 		double max;
-		for(ib = 0; ib < n - 1; ib += b)
+		for(i_BLOCK = 0; i_BLOCK < n - 1; i_BLOCK += b)
 		{
-			/*Partial Pivoting*/
-			end = ((n-1) > (ib + b -1)) ? (ib + b - 1) : n-1;
-			//printf("end = %d\n",end);
-			for(i = ib; i <= end; i++)
+			end = ((n-1) > (i_BLOCK + b -1)) ? (i_BLOCK + b - 1) : n-1;
+			for(i = i_BLOCK; i <= end; i++)
 			{
 				maxind = i;
 				max = fabs(A[i*n+i]);
@@ -239,11 +228,9 @@ int mydgetrf_block(double *A, int *ipiv, int n, int b)
 				else if (maxind !=i)
 				{
 
-					/*Save Pivot Infortmation*/
 					temps = ipiv[i];
 					ipiv[i] = ipiv[maxind];
 					ipiv[maxind] = temps;
-					/*Swap rows*/
 					for(j = 0; j < n; j++)
 					{
 						double tempv;
@@ -253,7 +240,6 @@ int mydgetrf_block(double *A, int *ipiv, int n, int b)
 					}
 				}
 
-				/*Update columns i+1 to end*/
 				for(j = i + 1; j < n; j++)
 				{
 					A[j * n + i] = (double)A[j * n + i] / A[i * n + i];
@@ -264,24 +250,19 @@ int mydgetrf_block(double *A, int *ipiv, int n, int b)
 				}
 			}
 
-			/*inv(LL)*/
-			/*double y;y = (double *) malloc(sizeof(double) * (end - ib + 1) * (n - end));y[0] =; */
-			for(i = ib; i <= end; i++)
+			for(i = i_BLOCK; i <= end; i++)
 			{
 				for(k = end +1; k < n; k++)
 				{
 					double sum = 0;
-					for(j = ib; j < i; j++)
+					for(j = i_BLOCK; j < i; j++)
 					{
 						sum += A[i * n + j] * A [j * n + k];
 					}
 					A[i * n + k] -= sum;
 				}
 			}
-			/*Delayed update of rest of matrix using matrix-matrix multiplication*/
-			/*void mydgemm(double *A, double *B, double *C, int n, int matx, int maty, int b)*/
-			//if(end!=n)
-			mydgemm(&A[(end+1) * n + ib], &A[ib * n + end +1], &A[(end+1) * n + (end + 1)], n , (n - end - 1) , (end-ib+1/*=b*/), 32);
+			mydgemm(&A[(end+1) * n + i_BLOCK], &A[i_BLOCK * n + end +1], &A[(end+1) * n + (end + 1)], n , (n - end - 1) , (end-i_BLOCK+1), 32);
 		}
     return 0;
 }
