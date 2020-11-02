@@ -221,6 +221,7 @@ void mydgemm(double *A, double *B, double *C, int n, int z, int m, int b)
  *      return  0 : return normally
  *
  **/
+
 int mydgetrf_block(double *A, int *ipiv, int n, int b)
 {
     int i, maxind, k, j, i_BLOCK, end, temps, t;
