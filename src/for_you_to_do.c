@@ -144,7 +144,8 @@ void mydtrsv(char UPLO, double* A, double* B, int n, int* ipiv)
 
 void mydgemm(double *A, double *B, double *C, int n, int z, int m, int b)
 {
-    int i, j, k, i_BLOCK, j_BLOCK, k_BLOCK;
+    int i, j, k;
+    int i_BLOCK, j_BLOCK, k_BLOCK;
     for (k = 0; k < m; k += b)
     {
         for (i = 0; i < z; i += b)
@@ -157,10 +158,10 @@ void mydgemm(double *A, double *B, double *C, int n, int z, int m, int b)
                     {
                         register int RA1 = i_BLOCK * n + k_BLOCK;
                         register int RA2 = RA1 + n;
-                        register double a00 = A[RA1];
-                        register double a01 = A[RA1 + 1];
-                        register double a10 = A[RA2];
-                        register double a11 = A[RA2 + 1];
+                        register double a_1 = A[RA1];
+                        register double a_2 = A[RA1 + 1];
+                        register double a_3 = A[RA2];
+                        register double a_4 = A[RA2 + 1];
 
                         for (j_BLOCK = j; j_BLOCK < j + b && j_BLOCK < z; j_BLOCK += 2)
                         {
@@ -168,19 +169,19 @@ void mydgemm(double *A, double *B, double *C, int n, int z, int m, int b)
                             register int RC1 = i_BLOCK * n + j_BLOCK;
                             register int RB2 = RB1 + n; 
                             register int RC2 = RC1 + n;
-                            register double b00 = B[RB1];
-                            register double b01 = B[RB1 + 1];
-                            register double b10 = B[RB2]; 
-                            register double b11 = B[RB2 + 1];
-                            register double c00 = C[RC1];
-                            register double c01 = C[RC1 + 1];
-                            register double c10 = C[RC2];
-                            register double c11 = C[RC2 + 1];
+                            register double b_0 = B[RB1];
+                            register double b_1 = B[RB1 + 1];
+                            register double b_2 = B[RB2]; 
+                            register double b_3 = B[RB2 + 1];
+                            register double c_0 = C[RC1];
+                            register double c_1 = C[RC1 + 1];
+                            register double c_2 = C[RC2];
+                            register double c_3 = C[RC2 + 1];
 
-                            C[RC1] = C[RC1] - a00 * b00 + a01 * b10;
-                            C[RC1 + 1] = C[RC1 + 1] - a00 * b01 + a01 * b11;
-                            C[RC2] = C[RC2] - a10 * b00 + a11 * b10;
-                            C[RC2 + 1] = C[RC2 + 1] - a10 * b01 + a11 * b11;
+                            C[RC1] = C[RC1] - a_1 * b_0 + a_2 * b_2;
+                            C[RC1 + 1] = C[RC1 + 1] - a_1 * b_1 + a_2 * b_3;
+                            C[RC2] = C[RC2] - a_3 * b_0 + a_4 * b_2;
+                            C[RC2 + 1] = C[RC2 + 1] - a_3 * b_1 + a_4 * b_3;
                         }
                     }
                 }
