@@ -237,7 +237,7 @@ int mydgetrf_block(double *A, int *ipiv, int n, int b)
             {
                 if (fabs(A[k * n + i]) > max)
                 {
-                    max_of_index = k;
+                    max_of_index = k; 
                     max = fabs(A[k * n + i]);
                 }
             }
