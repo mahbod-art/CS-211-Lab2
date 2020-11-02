@@ -26,7 +26,7 @@ int get_block_size()
  *
  **/
 
-/*int mydgetrf(double *A, int *ipiv, int n)
+int mydgetrf(double *A, int *ipiv, int n)
 {
     int i, j, k, max_of_index, var;
     for (i = 0; i < n - 1; i++)
@@ -72,7 +72,7 @@ int get_block_size()
         }
     }
     return 0;
-}*/
+}
 
 /**
  *
@@ -102,10 +102,10 @@ int get_block_size()
  *
  **/
 
-/*void mydtrsv(char UPLO, double* A, double* B, int n, int* ipiv)
+void mydtrsv(char UPLO, double* A, double* B, int n, int* ipiv)
 {
     /* add your code here */
-    /*int i, j;
+    int i, j;
     double *new_var = (double*) malloc(n * sizeof(double));
     if (UPLO == 'L')
     {
@@ -132,7 +132,7 @@ int get_block_size()
     }
     free(new_var);
     return;
-}*/
+}
 
 /**
  *
