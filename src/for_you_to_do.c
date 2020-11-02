@@ -220,60 +220,75 @@ void mydgemm(double *A, double *B, double *C, int n, int z, int m, int b)
  **/
 int mydgetrf_block(double *A, int *ipiv, int n, int b)
 {
-		int i, j, k, p, e, m_index, iblock, vars;
+		int i, maxind, k, j, ib, end, temps, t;
 		double max;
-        
-		for (iblock = 0; iblock < n - 1; iblock += b)
+		for(ib = 0; ib < n - 1; ib += b)
 		{
-			e = ((n-1) > (iblock + b -1)) ? (iblock + b - 1) : n-1;
-			for (i = iblock; i <= e; i++)
+			/*Partial Pivoting*/
+			end = ((n-1) > (ib + b -1)) ? (ib + b - 1) : n-1;
+			//printf("end = %d\n",end);
+			for(i = ib; i <= end; i++)
 			{
-				m_index = i;
+				maxind = i;
 				max = fabs(A[i*n+i]);
-				for (k = i + 1; k < n; k++)
+				for(k = i+1; k < n; k++)
 				{
-					if (fabs(A[k * n + i]) > max)
+					if(fabs(A[k * n + i]) > max)
 					{
-						m_index = k;
+						maxind = k;
 						max = fabs(A[k * n + i]);
 					}
 				}
-				if (max == 0) return -1;
-				else if (m_index !=i)
+				if(max == 0) return -1;
+				else if (maxind !=i)
 				{
-					vars = ipiv[i];
-					ipiv[i] = ipiv[m_index];
-					ipiv[m_index] = vars;
-					for (j = 0; j < n; j++)
+
+					/*Save Pivot Infortmation*/
+					temps = ipiv[i];
+					ipiv[i] = ipiv[maxind];
+					ipiv[maxind] = temps;
+					/*Swap rows*/
+					for(j = 0; j < n; j++)
 					{
 						double tempv;
 						tempv = A[i * n + j];
-						A[i * n + j] = A[m_index * n + j];
-						A[m_index * n + j] = tempv;
+						A[i * n + j] = A[maxind * n + j];
+						A[maxind * n + j] = tempv;
 					}
 				}
 
-				for (j = i + 1; j < n; j++)
+				/*Update columns i+1 to end*/
+				for(j = i + 1; j < n; j++)
 				{
 					A[j * n + i] = (double)A[j * n + i] / A[i * n + i];
-					for (p = i + 1; p <= e; p++)
-						A[j * n + p] = A[j * n + p] - A[j * n + i] * A[i * n + p];
+					for(t = i + 1;t <= end; t++)
+					{
+						A[j*n+t] = A[j*n+t] - A[j*n+i] * A[i*n+t];
+					}
 				}
 			}
 
-			for (i = iblock; i <= e; i++)
+			/*inv(LL)*/
+			/*double y;y = (double *) malloc(sizeof(double) * (end - ib + 1) * (n - end));y[0] =; */
+			for(i = ib; i <= end; i++)
 			{
-				for (k = e +1; k < n; k++)
+				for(k = end +1; k < n; k++)
 				{
 					double sum = 0;
-					for(j = iblock; j < i; j++)
-						sum = sum + A[i * n + j] * A [j * n + k];
+					for(j = ib; j < i; j++)
+					{
+						sum += A[i * n + j] * A [j * n + k];
+					}
 					A[i * n + k] -= sum;
 				}
 			}
-			mydgemm(&A[(e+1) * n + iblock], &A[iblock * n + e +1], &A[(e+1) * n + (e + 1)], n , (n - e - 1) , (e-iblock+1), 32);
+			/*Delayed update of rest of matrix using matrix-matrix multiplication*/
+			/*void mydgemm(double *A, double *B, double *C, int n, int matx, int maty, int b)*/
+			//if(end!=n)
+			mydgemm(&A[(end+1) * n + ib], &A[ib * n + end +1], &A[(end+1) * n + (end + 1)], n , (n - end - 1) , (end-ib+1/*=b*/), 32);
 		}
     return 0;
 }
+
 
 
