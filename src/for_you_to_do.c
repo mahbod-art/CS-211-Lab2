@@ -43,10 +43,8 @@ int mydgetrf(double *A, int *ipiv, int n)
             }
         }
 
-        //we should consider zero pivot or too small pivot
-        if (fabs(max - 0.0) < 0.001) 
+        if (max == 0) 
             return -1;
-
         else if (max_of_index != i)
         {
             //swap rows
