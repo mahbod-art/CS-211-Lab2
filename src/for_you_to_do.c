@@ -156,17 +156,17 @@ void mydgemm(double *A, double *B, double *C, int n, int matx, int maty, int b)
                     {
                         register int A1 = i_BLOCK *n + k_BLOCK;
                         register int A2 = A1 + n;
-                        register double a00 = A[A1],a01 = A[A1 + 1],a10 = A[A2],a11 = A[A2 + 1];
+                        register double a0 = A[A1],a1 = A[A1 + 1],a2 = A[A2],a3 = A[A2 + 1];
                         for(j_BLOCK = j;j_BLOCK < j + b && j_BLOCK < matx;j_BLOCK += 2)
                         {
                             register int B1 = k_BLOCK * n + j_BLOCK,C1 = i_BLOCK * n + j_BLOCK;
                             register int B2 = B1 + n,C2 = C1 + n;
-                            register double b00 = B[B1],b01 = B[B1 + 1],b10 = B[B2],b11 = B[B2 + 1];
-                            register double c00 = C[C1],c01 = C[C1 + 1],c10 = C[C2],c11 = C[C2 + 1];
-                            C[C1] -= a00 * b00 + a01 * b10;
-                            C[C1+1] -= a00 * b01 + a01 * b11;
-                            C[C2] -= a10 * b00 + a11 * b10;
-                            C[C2+1] -= a10 * b01 + a11 * b11;
+                            register double b0 = B[B1],b1 = B[B1 + 1],b2 = B[B2],b3 = B[B2 + 1];
+                            register double c0 = C[C1],c1 = C[C1 + 1],c2 = C[C2],c3 = C[C2 + 1];
+                            C[C1] -= a0 * b0 + a1 * b2;
+                            C[C1+1] -= a0 * b1 + a1 * b3;
+                            C[C2] -= a2 * b0 + a3 * b2;
+                            C[C2+1] -= a2 * b1 + a3 * b3;
 
                         }
                     }
@@ -207,52 +207,52 @@ void mydgemm(double *A, double *B, double *C, int n, int matx, int maty, int b)
  **/
 int mydgetrf_block(double *A, int *ipiv, int n, int b)
 {
-		int i, maxind, k, j, i_BLOCK, end, temps, t;
+		int i, j, k, e, max_index, i_BLOCK, var, t;
 		double max;
 		for(i_BLOCK = 0; i_BLOCK < n - 1; i_BLOCK += b)
 		{
-			end = ((n-1) > (i_BLOCK + b -1)) ? (i_BLOCK + b - 1) : n-1;
-			for(i = i_BLOCK; i <= end; i++)
+			e = ((n-1) > (i_BLOCK + b -1)) ? (i_BLOCK + b - 1) : n-1;
+			for(i = i_BLOCK; i <= e; i++)
 			{
-				maxind = i;
+				max_index = i;
 				max = fabs(A[i*n+i]);
 				for(k = i+1; k < n; k++)
 				{
 					if(fabs(A[k * n + i]) > max)
 					{
-						maxind = k;
+						max_index = k;
 						max = fabs(A[k * n + i]);
 					}
 				}
 				if(max == 0) return -1;
-				else if (maxind !=i)
+				else if (max_index !=i)
 				{
 
-					temps = ipiv[i];
-					ipiv[i] = ipiv[maxind];
-					ipiv[maxind] = temps;
+					var = ipiv[i];
+					ipiv[i] = ipiv[max_index];
+					ipiv[max_index] = var;
 					for(j = 0; j < n; j++)
 					{
 						double tempv;
 						tempv = A[i * n + j];
-						A[i * n + j] = A[maxind * n + j];
-						A[maxind * n + j] = tempv;
+						A[i * n + j] = A[max_index * n + j];
+						A[max_index * n + j] = tempv;
 					}
 				}
 
 				for(j = i + 1; j < n; j++)
 				{
 					A[j * n + i] = (double)A[j * n + i] / A[i * n + i];
-					for(t = i + 1;t <= end; t++)
+					for(t = i + 1;t <= e; t++)
 					{
 						A[j*n+t] = A[j*n+t] - A[j*n+i] * A[i*n+t];
 					}
 				}
 			}
 
-			for(i = i_BLOCK; i <= end; i++)
+			for(i = i_BLOCK; i <= e; i++)
 			{
-				for(k = end +1; k < n; k++)
+				for(k = e +1; k < n; k++)
 				{
 					double sum = 0;
 					for(j = i_BLOCK; j < i; j++)
@@ -262,7 +262,7 @@ int mydgetrf_block(double *A, int *ipiv, int n, int b)
 					A[i * n + k] -= sum;
 				}
 			}
-			mydgemm(&A[(end+1) * n + i_BLOCK], &A[i_BLOCK * n + end +1], &A[(end+1) * n + (end + 1)], n , (n - end - 1) , (end-i_BLOCK+1), 32);
+			mydgemm(&A[(e+1) * n + i_BLOCK], &A[i_BLOCK * n + e +1], &A[(e+1) * n + (e + 1)], n , (n - e - 1) , (e-i_BLOCK+1), 32);
 		}
     return 0;
 }
