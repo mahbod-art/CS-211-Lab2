@@ -26,7 +26,7 @@ int get_block_size()
  *
  **/
 
-int mydgetrf(double *A, int *ipiv, int n)
+/*int mydgetrf(double *A, int *ipiv, int n)
 {
     int i, j, k, max_of_index, var;
     for (i = 0; i < n - 1; i++)
@@ -72,7 +72,7 @@ int mydgetrf(double *A, int *ipiv, int n)
         }
     }
     return 0;
-}
+}*/
 
 /**
  *
@@ -102,10 +102,10 @@ int mydgetrf(double *A, int *ipiv, int n)
  *
  **/
 
-void mydtrsv(char UPLO, double* A, double* B, int n, int* ipiv)
+/*void mydtrsv(char UPLO, double* A, double* B, int n, int* ipiv)
 {
     /* add your code here */
-    int i, j;
+    /*int i, j;
     double *new_var = (double*) malloc(n * sizeof(double));
     if (UPLO == 'L')
     {
@@ -132,7 +132,7 @@ void mydtrsv(char UPLO, double* A, double* B, int n, int* ipiv)
     }
     free(new_var);
     return;
-}
+}*/
 
 /**
  *
@@ -141,52 +141,48 @@ void mydtrsv(char UPLO, double* A, double* B, int n, int* ipiv)
  **/
 
 
-void mydgemm(double *A, double *B, double *C, int n, int z, int m, int b)
+void mydgemm(double *A, double *B, double *C, int n, int matx, int maty, int b)
 {
-    int i, j, k;
-    int i_BLOCK, j_BLOCK, k_BLOCK;
-    for (k = 0; k < m; k += b)
-    {
-        for (i = 0; i < z; i += b)
-        {
-            for (j = 0; j < z; j += b)
-            {
-                for (k_BLOCK = k; k_BLOCK < k + b && k_BLOCK < m; k_BLOCK += 2)
-                {
-                    for (i_BLOCK = i; i_BLOCK < i + b && i_BLOCK < z; i_BLOCK += 2)
-                    {
-                        register int RA1 = i_BLOCK * n + k_BLOCK;
-                        register int RA2 = RA1 + n;
-                        register double a_1 = A[RA1];
-                        register double a_2 = A[RA1 + 1];
-                        register double a_3 = A[RA2];
-                        register double a_4 = A[RA2 + 1];
-
-                        for (j_BLOCK = j; j_BLOCK < j + b && j_BLOCK < z; j_BLOCK += 2)
+	int i , j , k , iB, jB , kB;
+        for( k = 0;k < maty ; k += b)
+                for( i = 0;i < matx;i += b)
+                        for( j = 0;j < matx ;j += b)
                         {
-                            register int RB1 = k_BLOCK * n + j_BLOCK;
-                            register int RC1 = i_BLOCK * n + j_BLOCK;
-                            register int RB2 = RB1 + n; 
-                            register int RC2 = RC1 + n;
-                            register double b_0 = B[RB1];
-                            register double b_1 = B[RB1 + 1];
-                            register double b_2 = B[RB2]; 
-                            register double b_3 = B[RB2 + 1];
-                            register double c_0 = C[RC1];
-                            register double c_1 = C[RC1 + 1];
-                            register double c_2 = C[RC2];
-                            register double c_3 = C[RC2 + 1];
+                                for( kB = k;kB < k + b && kB < maty;kB += 2)
+                                        for( iB = i;iB <i + b && iB < matx;iB += 2)
+                                        {
+                                                register int regA00 = iB *n + kB;
+                                                register int regA10 = regA00 + n;
+                                                register double a00 = A[regA00],a01 = A[regA00 + 1],a10 = A[regA10],a11 = A[regA10 + 1];
+                                                for(jB = j;jB < j + b && jB < matx;jB += 2)
+                                                {
+                                                        register int regB00 = kB * n + jB,regC00 = iB * n + jB;
+                                                        register int regB10 = regB00 + n,regC10 = regC00 + n;
+                                                        register double b00 = B[regB00],b01 = B[regB00 + 1],b10 = B[regB10],b11 = B[regB10 + 1];
+                                                        register double c00 = C[regC00],c01 = C[regC00 + 1],c10 = C[regC10],c11 = C[regC10 + 1];
+                                                        C[regC00] -= a00 * b00 + a01 * b10;
+                                                        C[regC00+1] -= a00 * b01 + a01 * b11;
+                                                        C[regC10] -= a10 * b00 + a11 * b10;
+                                                        C[regC10+1] -= a10 * b01 + a11 * b11;
 
-                            C[RC1] = C[RC1] - a_1 * b_0 + a_2 * b_2;
-                            C[RC1 + 1] = C[RC1 + 1] - a_1 * b_1 + a_2 * b_3;
-                            C[RC2] = C[RC2] - a_3 * b_0 + a_4 * b_2;
-                            C[RC2 + 1] = C[RC2 + 1] - a_3 * b_1 + a_4 * b_3;
-                        }
-                    }
-                }
-            } 
-        }
-    }
+                                                }
+                                        }
+                        }/*
+	int i , j , k, iB , jB , kB;
+		for(k = 0;k < maty;k += b)
+			for(i = 0;i < matx;i += b)
+				for( j = 0;j < matx;j += b)
+				{
+					for(kB = k;kB <k + b && kB < maty;kB++)
+						for(iB = i;iB < i + b && iB < matx;iB++)
+						{
+							register double sum = A[iB * n + kB];
+							for(jB = j;jB < j + b && jB < matx;jB++)
+								C[iB * n + jB] -=sum*B[kB * n + jB];
+						}
+				}*/
+
+
 }
 
 /**
@@ -289,6 +285,5 @@ int mydgetrf_block(double *A, int *ipiv, int n, int b)
 		}
     return 0;
 }
-
 
 
