@@ -157,13 +157,26 @@ void mydgemm(double *A, double *B, double *C, int n, int z, int m, int b)
                     {
                         register int RA1 = i_BLOCK * n + k_BLOCK;
                         register int RA2 = RA1 + n;
-                        register double a00 = A[RA1], a01 = A[RA1 + 1], a10 = A[RA2], a11 = A[RA2 + 1];
+                        register double a00 = A[RA1];
+                        register double a01 = A[RA1 + 1];
+                        register double a10 = A[RA2];
+                        register double a11 = A[RA2 + 1];
+
                         for (j_BLOCK = j; j_BLOCK < j + b && j_BLOCK < z; j_BLOCK += 2)
                         {
-                            register int RB1 = k_BLOCK * n + j_BLOCK, RC1 = i_BLOCK * n + j_BLOCK;
-                            register int RB2 = RB1 + n, RC2 = RC1 + n;
-                            register double b00 = B[RB1], b01 = B[RB1 + 1], b10 = B[RB2], b11 = B[RB2 + 1];
-                            register double c00 = C[RC1], c01 = C[RC1 + 1], c10 = C[RC2], c11 = C[RC2 + 1];
+                            register int RB1 = k_BLOCK * n + j_BLOCK;
+                            register int RC1 = i_BLOCK * n + j_BLOCK;
+                            register int RB2 = RB1 + n; 
+                            register int RC2 = RC1 + n;
+                            register double b00 = B[RB1];
+                            register double b01 = B[RB1 + 1];
+                            register double b10 = B[RB2]; 
+                            register double b11 = B[RB2 + 1];
+                            register double c00 = C[RC1];
+                            register double c01 = C[RC1 + 1];
+                            register double c10 = C[RC2];
+                            register double c11 = C[RC2 + 1];
+
                             C[RC1] = C[RC1] - a00 * b00 + a01 * b10;
                             C[RC1 + 1] = C[RC1 + 1] - a00 * b01 + a01 * b11;
                             C[RC2] = C[RC2] - a10 * b00 + a11 * b10;
